@@ -64,4 +64,3 @@ All work here was done individually, following the assignment's naming conventio
 
 Repository link: https://github.com/Axello47/oracle_pdb_ass_II_29273_axel
 PDB name created: AX_PDB_29273
-Issues encountered: No
