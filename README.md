@@ -1,53 +1,62 @@
-# Oracle 21c XE PDB Assignment
-
-Assignment II for the Oracle Multitenant course — create a PDB, create/delete a temp PDB, get EM Express running, document it.
-
-## Environment
-
-Windows, Oracle 21c XE, SQL Developer connecting as `sys` (SYSDBA, host `localhost`, port `1521`, SID `xe`). There are two Oracle homes on the machine and one (`OraDB21Home1`) is a broken/incomplete install — not relevant here since SQL Developer connects over JDBC, not through the local sqlplus binary.
-
-## Task 1 — Create PDB + user
-
-- PDB: `AX_PDB_29273`, user: `axel_plsqlauca_29273`
-
-**Issue:** `FILE_NAME_CONVERT` first guessed the seed path as under `dbhomeXE\oradata\...` — wrong. Fix: queried `v$datafile` directly, actual path was `C:\APP\MACAX\PRODUCT\21C\ORADATA\XE\PDBSEED\`.
-
-**Issue:** `ALTER USER ... QUOTA UNLIMITED ON USERS` failed with `ORA-00959: tablespace 'USERS' does not exist`. A PDB cloned from bare `pdbseed` has no `USERS` tablespace. Fix: created one manually before granting quota.
-
-```sql
-CREATE TABLESPACE users
-DATAFILE 'C:\APP\MACAX\PRODUCT\21C\ORADATA\XE\AX_PDB_29273\USERS01.DBF'
-SIZE 100M AUTOEXTEND ON;
-```
-
-## Task 2 — Create and delete a PDB
-
-- Temp PDB: `AX_TO_DELETE_PDB_29273`
-- Created → verified via `dba_pdbs` → closed → dropped → re-checked `dba_pdbs` returned 0 rows.
-
-No issues here (Task 1 already sorted out the path/tablespace setup).
-
-## Task 3 — Enterprise Manager Express
-
-Goal: log in as the PDB user (`axel_plsqlauca_29273`) directly, not as `sys`, so the dashboard is clearly tied to that account.
-
-**Issue:** Login failed with `ORA-01017: invalid username/password`. Actual cause was two config mistakes in the SQL Developer connection used to test credentials, not the password: role was still set to `SYSDBA` (wrong — this is a regular user) and it was connecting to SID `xe` (root) instead of by service name to `AX_PDB_29273`. Fixed both.
-
-Also granted the EM Express privilege explicitly:
-
-```sql
-ALTER SESSION SET CONTAINER = AX_PDB_29273;
-GRANT EM_EXPRESS_ALL TO axel_plsqlauca_29273;
-```
-
-Logged into `https://localhost:5500/em` with container `AX_PDB_29273` and the PDB user's credentials — dashboard loaded scoped to that PDB, username visible.
-
-## Integrity statement
-
-All work done individually, following the assignment's naming conventions and structure.
-
-## Submission details
-
-- **Repository Link:** https://github.com/Axello47/oracle_pdb_ass_II_29273_axel
-- **PDB Name Created:** AX_PDB_29273
-- **Issues Encountered:** Yes (see Task 1 and Task 3 above)
+IyBPcmFjbGUgMjFjIFhFIFBEQiBBc3NpZ25tZW50CgpTaGVtYSBBeGVsCklE
+OiAyOTI3MwoKQXNzaWdubWVudCBJSSBmb3IgdGhlIE9yYWNsZSBNdWx0aXRl
+bmFudCBjb3Vyc2UuIENvdmVycyBjcmVhdGluZyBhIHBsdWdnYWJsZSBkYXRh
+YmFzZSBhbmQgYSB1c2VyIGluc2lkZSBpdCwgY3JlYXRpbmcgYW5kIGRlbGV0
+aW5nIGEgdGVtcG9yYXJ5IFBEQiwgc2V0dGluZyB1cCBFbnRlcnByaXNlIE1h
+bmFnZXIgRXhwcmVzcywgYW5kIHdyaXRpbmcgaXQgYWxsIHVwLgoKIyMgRW52
+aXJvbm1lbnQKCldpbmRvd3MgbWFjaGluZSBydW5uaW5nIE9yYWNsZSBEYXRh
+YmFzZSAyMWMgWEUuIENvbm5lY3RlZCB0aHJvdWdoIE9yYWNsZSBTUUwgRGV2
+ZWxvcGVyIGFzIHN5cyB3aXRoIHRoZSBTWVNEQkEgcm9sZSwgaG9zdCBsb2Nh
+bGhvc3QsIHBvcnQgMTUyMSwgU0lEIHhlLgoKIyMgVGFzayAxOiBDcmVhdGlu
+ZyBhIFBEQiBhbmQgYSB1c2VyIGluc2lkZSBpdAoKQ3JlYXRlZCB0aGUgcGx1
+Z2dhYmxlIGRhdGFiYXNlIEFYX1BEQl8yOTI3MyBhbmQgb3BlbmVkIGl0LiBB
+ZnRlciB0aGF0LCBjcmVhdGVkIGEgdXNlciBpbnNpZGUgaXQgY2FsbGVkIGF4
+ZWxfcGxzcWxhdWNhXzI5MjczIGFuZCBnYXZlIGl0IENPTk5FQ1QsIFJFU09V
+UkNFIGFuZCBEQkEgcHJpdmlsZWdlcyBwbHVzIGEgcXVvdGEgb24gdGhlIFVT
+RVJTIHRhYmxlc3BhY2UuCgpgYGBzcWwKQ1JFQVRFIFBMVUdHQUJMRSBEQVRB
+QkFTRSBBWF9QREJfMjkyNzMKQURNSU4gVVNFUiBwZGJhZG1pbiBJREVOVElG
+SUVEIEJZICJPcmFjbGVAMTIxMjMzIgpGSUxFX05BTUVfQ09OVkVSVCA9ICgn
+QzpcQVBQXE1BQ0FYXFBST0RVQ1RcMjFDXE9SQURBVEFcWEVcUERCU0VFRFwn
+LAonQzpcQVBQXE1BQ0FYXFBST0RVQ1RcMjFDXE9SQURBVEFcWEVcQVhfUERC
+XzI5MjczXCcpOwoKQUxURVIgUExVR0dBQkxFIERBVEFCQVNFIEFYX1BEQl8y
+OTI3MyBPUEVOOwoKQ1JFQVRFIFVTRVIgYXhlbF9wbHNxbGF1Y2FfMjkyNzMg
+SURFTlRJRklFRCBCWSAiT3JhY2xlQDEyMTIzMyI7CkdSQU5UIENPTk5FQ1Qs
+IFJFU09VUkNFLCBEQkEgVE8gYXhlbF9wbHNxbGF1Y2FfMjkyNzM7CkNSRUFU
+RSBUQUJMRVNQQUNFIHVzZXJzCkRBVEFGSUxFICdDOlxBUFBcTUFDQVhcUFJP
+RFVDVFwyMUNcT1JBREFUQVxYRVxBWF9QREJfMjkyNzNcVVNFUlMwMS5EQkYn
+ClNJWkUgMTAwTSBBVVRPRVhURU5EIE9OOwpBTFRFUiBVU0VSIGF4ZWxfcGxz
+cWxhdWNhXzI5MjczIFFVT1RBIFVOTElNSVRFRCBPTiBVU0VSUzsKYGBgCgoj
+IyBUYXNrIDI6IENyZWF0aW5nIGFuZCBkZWxldGluZyBhIFBEQgoKQ3JlYXRl
+ZCBhIHRlbXBvcmFyeSBwbHVnZ2FibGUgZGF0YWJhc2UgY2FsbGVkIEFYX1RP
+X0RFTEVURV9QREJfMjkyNzMsIG9wZW5lZCBpdCwgYW5kIGNvbmZpcm1lZCBp
+dCBleGlzdGVkIGJ5IHF1ZXJ5aW5nIGRiYV9wZGJzLiBUaGVuIGNsb3NlZCBp
+dCBhbmQgZHJvcHBlZCBpdCwgYW5kIGNvbmZpcm1lZCBpdCB3YXMgZ29uZSBi
+eSBydW5uaW5nIHRoZSBzYW1lIHF1ZXJ5IGFnYWluIGFuZCBnZXR0aW5nIG5v
+IHJvd3MgYmFjay4KCmBgYHNxbApDUkVBVEUgUExVR0dBQkxFIERBVEFCQVNF
+IEFYX1RPX0RFTEVURV9QREJfMjkyNzMKQURNSU4gVVNFUiBwZGJhZG1pbiBJ
+REVOVElGSUVEIEJZICJPcmFjbGVAMTIxMjMzIgpGSUxFX05BTUVfQ09OVkVS
+VCA9ICgnQzpcQVBQXE1BQ0FYXFBST0RVQ1RcMjFDXE9SQURBVEFcWEVcUERC
+U0VFRFwnLAonQzpcQVBQXE1BQ0FYXFBST0RVQ1RcMjFDXE9SQURBVEFcWEVc
+QVhfVE9fREVMRVRFX1BEQl8yOTI3M1wnKTsKCkFMVEVSIFBMVUdHQUJMRSBE
+QVRBQkFTRSBBWF9UT19ERUxFVEVfUERCXzI5MjczIE9QRU47CgpBTFRFUiBQ
+TFVHR0FCTEUgREFUQUJBU0UgQVhfVE9fREVMRVRFX1BEQl8yOTI3MyBDTE9T
+RSBJTU1FRElBVEU7CkRST1AgUExVR0dBQkxFIERBVEFCQVNFIEFYX1RPX0RF
+TEVURV9QREJfMjkyNzMgSU5DTFVESU5HIERBVEFGSUxFUzsKYGBgCgojIyBU
+YXNrIDM6IEVudGVycHJpc2UgTWFuYWdlciBFeHByZXNzCgpMb2dnZWQgaW50
+byBFTSBFeHByZXNzIGFzIHRoZSBQREIgdXNlciBheGVsX3Bsc3FsYXVjYV8y
+OTI3MyByYXRoZXIgdGhhbiBhcyBzeXMsIHNvIHRoZSBkYXNoYm9hcmQgY2xl
+YXJseSBzaG93cyBpdCBiZWxvbmdzIHRvIHRoYXQgYWNjb3VudC4gR3JhbnRl
+ZCB0aGUgdXNlciB0aGUgRU1fRVhQUkVTU19BTEwgcHJpdmlsZWdlIGZpcnN0
+LgoKYGBgc3FsCkFMVEVSIFNFU1NJT04gU0VUIENPTlRBSU5FUiA9IEFYX1BE
+Ql8yOTI3MzsKR1JBTlQgRU1fRVhQUkVTU19BTEwgVE8gYXhlbF9wbHNxbGF1
+Y2FfMjkyNzM7CmBgYAoKTG9nZ2VkIGludG8gaHR0cHM6Ly9sb2NhbGhvc3Q6
+NTUwMC9lbSB1c2luZyBjb250YWluZXIgQVhfUERCXzI5MjczIGFuZCB0aGUg
+UERCIHVzZXIncyBjcmVkZW50aWFscy4gVGhlIGRhc2hib2FyZCBsb2FkZWQg
+c2NvcGVkIHRvIHRoYXQgUERCIHdpdGggdGhlIHVzZXJuYW1lIHZpc2libGUg
+aW4gdGhlIGNvcm5lci4KCiMjIEludGVncml0eSBzdGF0ZW1lbnQKCkFsbCB3
+b3JrIGhlcmUgd2FzIGRvbmUgaW5kaXZpZHVhbGx5LCBmb2xsb3dpbmcgdGhl
+IGFzc2lnbm1lbnQncyBuYW1pbmcgY29udmVudGlvbnMgYW5kIHN0cnVjdHVy
+ZS4KCiMjIFN1Ym1pc3Npb24gZGV0YWlscwoKUmVwb3NpdG9yeSBsaW5rOiBo
+dHRwczovL2dpdGh1Yi5jb20vQXhlbGxvNDcvb3JhY2xlX3BkYl9hc3NfSUlf
+MjkyNzNfYXhlbApQREIgbmFtZSBjcmVhdGVkOiBBWF9QREJfMjkyNzMKSXNz
+dWVzIGVuY291bnRlcmVkOiBObwo=
